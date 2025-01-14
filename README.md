@@ -1,6 +1,6 @@
 # ScheduGB
 
-This project implements a simple round-robin task scheduler for the Nintendo Game Boy using C. It is designed to allow developers to manage multiple tasks in a cooperative multitasking environment on the Game Boy platform.
+This project implements a simple round-robin task scheduler for the Nintendo Game Boy using C. It is designed to allow developers to manage multiple tasks in a preempitve multitasking environment on the Game Boy platform.
 
 ## Prerequisites
 
