@@ -21,7 +21,7 @@ TASK_INFO_t taskTable[NUM_OF_TASKS] = {
 };
 
 
-void scheduler_sys_tick_handler(void) NONBANKED NAKED INTERRUPT
+void scheduler_sys_tick_handler(void) NONBANKED NAKED
 {
     __asm
         // On ISR entry, save registers onto the stack
