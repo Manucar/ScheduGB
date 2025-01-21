@@ -80,7 +80,7 @@ Run it in your preferred Game Boy emulator.
 
 The given example in the `main.c` file is printing on the console:
 
-![Tasks Demo](gif/tasks.gif)
+![Tasks Demo](tasks.gif)
 
 ## Acknowledgments
 
