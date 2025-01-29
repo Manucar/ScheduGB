@@ -48,6 +48,10 @@ typedef struct TCB_s
     struct TCB_s  *nextPt;
 }TCB_t;
 
+//!< Start the scheduler.
 void scheduler_start(void);
+
+//!< Give control back to the scheduler
+void scheduler_yield(void);
 
 #endif // __SCHEDULER_H__

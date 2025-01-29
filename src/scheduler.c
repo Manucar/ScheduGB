@@ -20,8 +20,7 @@ TASK_INFO_t taskTable[NUM_OF_TASKS] = {
     SYS_CFG_TSK_TABLE(STATIC_TASK_TABLE)
 };
 
-
-void scheduler_sys_tick_handler(void) NONBANKED NAKED
+static void scheduler_sys_tick_handler(void) NONBANKED NAKED
 {
     __asm
         // On ISR entry, save registers onto the stack
@@ -167,6 +166,12 @@ static void scheduler_launch_first_task(void) NONBANKED NAKED CRITICAL
         ret
 
     __endasm;
+}
+
+// Yield control back to scheduler by overflowing timer
+void scheduler_yield(void)
+{
+    TIMA_REG = 0xFFU;
 }
 
 void scheduler_start(void)

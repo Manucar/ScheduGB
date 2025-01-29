@@ -14,8 +14,12 @@ void task0(void)
         // section in order to be executed correctly.
         CRITICAL
         {
-            printf("%u\n",40);
+            for (int i = 0; i < 10; i++)
+            {
+                printf("%u\n",i);
+            }            
         }
+        scheduler_yield();
     }
 }
 
@@ -27,6 +31,7 @@ void task1(void)
         {
             printf("%u\n",41);
         }
+        scheduler_yield();
     }
 }
 
@@ -38,6 +43,7 @@ void task2(void)
         {
             printf("%u\n",42);
         }
+        scheduler_yield();
     }
 }
 
