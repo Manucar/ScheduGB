@@ -3,10 +3,51 @@
 
 #include <stdint.h>
 
+#define USE_DYNAMIC_TASKS
+
+#define POOL_SIZE 5
+#define BLOCK_SIZE 128
+
 #define NUM_OF_TASKS    3       // Number of static task allocated
 #define CPU_REGS        6       // Number of CPU register available
 #define PC_POS          2       // PC position into the stack frame
 
+typedef struct POOL_BLOCK_s
+{
+    uint8_t block[BLOCK_SIZE];
+    struct POOL_BLOCK_s * nextBlock;
+} POOL_BLOCK_t;
+
+// Define the prototype for the function type
+typedef void (*task_function)(void);
+
+//!< Define the structure to represent each task in the table
+typedef struct TASK_INFO_s{
+    uint8_t id;             // Task ID
+    task_function func;     // Pointer to the task function
+    uint16_t *taskStack;    // Pointer to the task stack memory
+    uint8_t size;           // Size of the task
+} TASK_INFO_t;
+
+//!< Task control block, implemented as a linked list to point to the TCB of the next task.
+typedef struct TCB_s
+{
+    uint16_t      *stackPt;
+    struct TCB_s  *nextPt;
+}TCB_t;
+
+void init_pool(void);
+
+void init_first_task(void *func);
+
+uint16_t *request_block(void);
+
+void release_block(uint16_t *block);
+
+void create_task(void *func);
+
+
+#if !defined(USE_DYNAMIC_TASKS)
 // List of task prototypes
 void task0(void);
 void task1(void);
@@ -30,24 +71,8 @@ void task2(void);
 #define STATIC_TASK_TABLE(id, function, attr, size) \
     { id, function, sys_tsk_##id##_sMemory, size },
 
-// Define the prototype for the function type
-typedef void (*task_function)(void);
 
-//!< Define the structure to represent each task in the table
-typedef struct TASK_INFO_s{
-    uint8_t id;             // Task ID
-    task_function func;     // Pointer to the task function
-    uint16_t *taskStack;    // Pointer to the task stack memory
-    uint8_t size;           // Size of the task
-} TASK_INFO_t;
-
-//!< Task control block, implemented as a linked list to point to the TCB of the next task.
-typedef struct TCB_s
-{
-    uint16_t      *stackPt;
-    struct TCB_s  *nextPt;
-}TCB_t;
-
+#endif // USE_DYNAMIC_TASKS
 //!< Start the scheduler.
 void scheduler_start(void);
 

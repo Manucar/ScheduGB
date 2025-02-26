@@ -47,7 +47,22 @@ void task2(void)
     }
 }
 
+void startup(void)
+{
+    create_task(&task0);
+    create_task(&task1);
+    create_task(&task2);
+    while (1)
+    {
+        
+    }
+    
+}
+
 void main(void)
 {
+    init_pool();
+    init_first_task(&startup);
+
     scheduler_start();
 }

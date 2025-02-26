@@ -7,10 +7,81 @@
 
 #include "scheduler.h"
 
-/// Define an array to store TCB's for the tasks.
+POOL_BLOCK_t pool[POOL_SIZE];
+POOL_BLOCK_t *freeBlock = NULL;
+
+/// Points to the TCB of the currently active task
+TCB_t *pCurntTcb = NULL;
+
+/// Still need to have a struct to hold task info
 TCB_t tcbs[NUM_OF_TASKS];
+
+
+void init_pool(void)
+{
+    for (int i = 0; i < POOL_SIZE - 1; i++)
+    {
+        pool[i].nextBlock = &pool[i+1];
+    }
+    pool[POOL_SIZE - 1].nextBlock = NULL;
+    freeBlock = &pool[0];  // Initialize free list head
+}
+
+void init_first_task(void *func)
+{
+    // Request memory
+    uint16_t *taskStack = request_block();
+
+    // Init task stack
+    taskStack[BLOCK_SIZE - CPU_REGS] = (uint16_t)(taskStack[BLOCK_SIZE - CPU_REGS]);
+    taskStack[BLOCK_SIZE - PC_POS] = (uint16_t)(func);
+
+    pCurntTcb->stackPt = taskStack;
+    pCurntTcb->nextPt = NULL;
+}
+
+uint16_t *request_block(void)
+{
+    if (freeBlock == NULL)
+    {
+        printf("No free blocks available!\n");
+        return NULL;
+    }
+
+    uint16_t *blockToReturn = freeBlock->block;
+    freeBlock = freeBlock->nextBlock;
+    return blockToReturn;
+}
+
+void release_block(uint16_t *block)
+{
+    if (block == NULL) return;
+
+    POOL_BLOCK_t *releasedBlock = (POOL_BLOCK_t *)block;
+    releasedBlock->nextBlock = freeBlock;
+    freeBlock = releasedBlock;
+}
+
+void create_task(void *func)
+{
+    uint16_t *taskStack = request_block();
+
+    taskStack[BLOCK_SIZE - CPU_REGS] = (uint16_t)(taskStack[BLOCK_SIZE - CPU_REGS]);
+    taskStack[BLOCK_SIZE - PC_POS] = (uint16_t)(func);
+
+
+    // TCB_t *newTask;
+    // newTask->nextPt = pCurntTcb;
+    // newTask->stackPt = taskStack;
+    pCurntTcb->nextPt = newTask;
+}
+
+#if !defined(USE_DYNAMIC_TASKS)
 /// Points to the TCB of the currently active task
 TCB_t *pCurntTcb;
+
+/// Define an array to store TCB's for the tasks.
+TCB_t tcbs[NUM_OF_TASKS];
 
 // Generate static memory arrays for each task
 SYS_CFG_TSK_TABLE(STATIC_MEMORY)
@@ -19,6 +90,7 @@ SYS_CFG_TSK_TABLE(STATIC_MEMORY)
 TASK_INFO_t taskTable[NUM_OF_TASKS] = {
     SYS_CFG_TSK_TABLE(STATIC_TASK_TABLE)
 };
+#endif //USE_DYNAMIC_TASKS
 
 static void scheduler_sys_tick_handler(void) NONBANKED NAKED
 {
@@ -117,6 +189,7 @@ static void scheduler_set_sys_tick(void)
     set_interrupts(TIM_IFLAG);
 }
 
+#if !defined(USE_DYNAMIC_TASKS)
 static void scheduler_init_thread_stack(void) CRITICAL
 {
     // Init each stack with known pattern 0xCD
@@ -138,6 +211,7 @@ static void scheduler_init_thread_stack(void) CRITICAL
     /// Make current tcb pointer point to the first task
     pCurntTcb = &tcbs[0];
 }
+#endif // USE_DYNAMIC_TASKS
 
 static void scheduler_launch_first_task(void) NONBANKED NAKED CRITICAL
 {
@@ -176,7 +250,9 @@ void scheduler_yield(void)
 
 void scheduler_start(void)
 {
+#if !defined(USE_DYNAMIC_TASKS)
     scheduler_init_thread_stack();
+#endif
     scheduler_set_sys_tick();
 
     scheduler_launch_first_task();
